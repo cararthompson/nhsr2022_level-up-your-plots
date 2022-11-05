@@ -1,0 +1,128 @@
+/*-- scss:defaults --*/
+
+// override root variables
+:root {
+--r-link-color: #28A569;
+}
+
+// fonts
+@import url('https://fonts.googleapis.com/css2?family=Enriqueta:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@700&display=swap');
+
+// to work locally
+@font-face {
+  font-family: 'brandon-text';
+  src: url("/fonts/BrandonText-Regular.ttf") format('truetype');
+}
+
+// to create a url that will work on GitHub Pages
+@font-face {
+  font-family: 'brandon-text';
+  src: url("/hdsi_rug/fonts/BrandonText-Regular.ttf") format('truetype');
+}
+
+
+$font-family-sans-serif: "brandon-text", Palatino,
+  FreeSerif, serif !default;
+$font-family-monospace: "Anonymous Pro", monospace !default;
+
+  // headings
+$presentation-heading-font: "Enriqueta", "Book Antiqua", Palatino,
+  FreeSerif, serif !default;
+$presentation-heading-color: #2C3D4F !default;
+
+// other variables
+$body-bg: #ffffff;
+$body-color: #1A242F;
+$highlight-color: #28A569;
+/* sets color of controls*/
+$link-color: #28A569;
+$presentation-font-size-root: 24pt;
+$selection-bg: #4076AE;
+
+/*-- scss:rules --*/
+
+.reveal .slide blockquote {
+  border-left: 3px solid $text-muted;
+  padding-left: 0.6em;
+  background: #F6F7F7;
+}
+
+.reveal h2 {
+  padding-bottom: 0.3em;
+}
+
+.reveal .footer {
+  color: #ffffff;
+  background-color: $presentation-heading-color;
+  display: block;
+  position: fixed;
+  padding-bottom: 12px;
+  padding-top: 12px;
+  width: 100%;
+  text-align: center;
+  font-size: 18px;
+  z-index: 2;
+}
+
+
+.reveal .controls {
+  color: $highlight-color;
+}
+
+.reveal .progress {
+  background: $presentation-heading-color;
+  color: $highlight-color
+}
+
+.reveal a {
+  color: #11559A;
+}
+
+.reveal a:hover {
+  color: #4076AE;
+}
+
+.reveal .footer a {
+  color: #F6F7F7;
+}
+
+.reveal .footer a:hover {
+  color: #FFFFFF;
+}
+
+.reveal .slide ul li {
+  list-style: none; /* Remove default bullets */
+}
+
+.reveal .slide ul li::before {
+  content: "\25FC";  /* Add content: \2022 is the CSS Code/unicode for a bullet; add a space for easier alignment! */
+  color: $highlight-color; /* Change the color */
+  display: inline-block; /* Needed to add space between the bullet and the text */
+  width: 1.5em; /* Also needed for space (tweak if needed) */
+  margin-left: -1.5em; /* Also needed for space (tweak if needed) */
+  font-size: 66%;
+}
+
+.reveal .panel-tabset ul li::before {
+  content: ""; /* Remove default bullets */
+}
+
+.reveal .monospace{
+  font-size: 36pt;
+}
+
+.reveal .faded{
+  opacity: 0.4;
+}
+
+
+.reveal .faded-small{
+  opacity: 0.4;
+  font-size: 0.8em;
+}
+
+
+.reveal .imitate-title{
+  font-size: 2em;
+}
