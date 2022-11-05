@@ -1,0 +1,2322 @@
+---
+title: "Level up your plots"
+subtitle: "NHS-R 2022 | Online Workshop | `r verbaliseR::prettify_date('2022-11-04', uk_or_us = 'UK')`"
+from: markdown+emoji
+format:
+  revealjs: 
+    transition: none
+    slide-number: false
+    chalkboard: 
+      buttons: false
+    preview-links: auto
+    logo: images/light-logo.png
+    theme: cararquarto.scss
+    footer: |
+        Slides and recording: [cararthompson.com/talks/nhsr2022-level-up](https://cararthompson.com/talks/nhsr2022-level-up)
+filters:
+ - code-visibility
+ - lightbox
+lightbox: auto
+auto-animate: true
+title-slide-attributes:
+    data-background-image: "images/dark-background.png"
+    data-background-size: stretch
+    data-background-opacity: "1"
+    data-background-color: black
+---
+
+# Intro {visibility=hidden}
+
+## Hi there :wave: ! {transition="convex-in none-out"}
+
+
+```{r setup}
+
+knitr::opts_chunk$set(dev = "ragg_png")
+
+```
+
+
+👩 Cara Thompson
+
+::: {.fragment}
+👩‍💻 Psychology PhD `%>%` 
+Analysis of postgraduate medical examinations `%>%` 
+Freelance data consultant specialising in dataviz and "enhanced" reproducible outputs
+:::
+
+::: {.fragment}
+💙 Helping others maximise the impact of their expertise
+:::
+<br>
+
+::: footer
+Find out more: [cararthompson.com/about](https://cararthompson.com/about)
+:::
+
+## Today's goal {transition="none"}
+
+**To equip you with design tips and coding tricks to enhance the story-telling capabilities of your plots.**
+
+A mix of talk, live coding and exercises
+
+::: {.incremental}
+- Part 1: Using colour and orientations to make the story easier to remember
+- Part 2: Adding colour and hierarchy to text, to keep the main thing the main thing
+- Part 3: Annotating the plot to highlight key information
+- Bonus track: Sources of inspiration + Q&A about your own plots
+:::
+
+## Introductions
+
+- I'm... and I work in...
+- I mostly use `R` for...
+- My favourite type of plot is...
+- The thing I find most challenging when creating a plot is...
+
+
+## Today's goal
+
+**To equip you with design tips and coding tricks to enhance the story-telling capabilities of your plots.**
+
+A mix of talk, live coding and exercises
+
+- Part 1: Using colour and orientations to make the story easier to remember
+- Part 2: Adding colour and hierarchy to text, to keep the main thing the main thing
+- Part 3: Annotating the data to highlight key information
+- Bonus track: Sources of inspiration + Q&A about your own plots
+
+# But first, please suspend all disbelief...
+
+--- 
+
+![](images/penguin-bakeoff.png)
+
+
+## The Great Penguin Bake Off
+
+The penguins had a baking competition to see which species could make the best banana loaf. Each species was given bananas of a different level of ripeness.
+
+```{r}
+library(palmerpenguins)
+library(tidyverse)
+
+ggplot(penguins,
+       aes(x = species, 
+           fill = species,
+           y = bill_length_mm)) +
+  geom_bar(show.legend = FALSE, 
+           stat = "summary", 
+           fun = "mean") +
+  labs(title = "The taller the bar, the yummier the cake!") +
+  theme_minimal(base_size = 16) +
+  theme(axis.title = element_blank(),
+        panel.grid = element_blank())
+```
+
+## The Great Penguin Bake Off
+
+The penguins had a baking competition to see which species could make the best banana loaf. Each species was given bananas of a different level of ripeness.
+
+```{r}
+banana_type_palette <- list("Adelie" = "#89973d",
+                            "Chinstrap" = "#e8b92f",
+                            "Gentoo" = "#a45e41")
+
+ggplot(penguins,
+       aes(x = species, 
+           fill = species,
+           y = bill_length_mm)) +
+  geom_bar(show.legend = FALSE, 
+           stat = "summary", 
+           fun = "mean") +
+  scale_fill_manual(values = banana_type_palette) +
+  labs(title = "The taller the bar, the yummier the cake!") +
+  theme_minimal(base_size = 16) +
+  theme(axis.title = element_blank(),
+        panel.grid = element_blank())
+```
+
+
+## The Great Penguin Bake Off
+
+The Adelie penguins decided to experiment with different quantities of banana in their mix. Each island chose a different quantity.
+
+```{r}
+penguins <- penguins %>%
+  mutate(banana_quantity = case_when(species == "Adelie" & island == "Biscoe" ~ 1,
+                                     species == "Adelie" & island == "Dream" ~ 0.6,
+                                     species == "Adelie" & island == "Torgersen" ~ 0,
+                                     TRUE ~ 1))
+
+ggplot(filter(penguins, species == "Adelie"),
+       aes(x = island, 
+           fill = island,
+           y = bill_length_mm)) +
+  geom_bar(show.legend = FALSE, 
+           stat = "summary", 
+           fun = "mean",
+           size = 1) +
+  scale_alpha(range = c(0.1, 0.9)) +
+  labs(title = "The taller the bar, the yummier the cake!") +
+  theme_minimal(base_size = 16) +
+  theme(axis.title = element_blank(),
+        panel.grid = element_blank())
+```
+
+
+## The Great Penguin Bake Off
+
+The Adelie penguins decided to experiment with different quantities of banana in their mix. Each island chose a different quantity.
+
+```{r}
+ggplot(filter(penguins, species == "Adelie"),
+       aes(x = island, 
+           fill = species,
+           alpha = banana_quantity,
+           y = bill_length_mm)) +
+  geom_bar(show.legend = FALSE, 
+           stat = "summary", 
+           fun = "mean",
+           size = 1.5,
+           colour = banana_type_palette$Adelie) +
+  scale_fill_manual(values = banana_type_palette) +
+  scale_alpha(range = c(0.2, 1)) +
+  labs(title = "The taller the bar, the yummier the cake!") +
+  theme_minimal(base_size = 16) +
+  theme(axis.title = element_blank(),
+        panel.grid = element_blank())
+```
+
+## The Great Penguin Bake Off
+
+The penguins also baked their cakes for different amounts of time. Here are the mean durations per species. Which species left their cakes in the oven for longest?
+
+```{r}
+duration_plot <- ggplot(penguins,
+                        aes(x = species, 
+                            fill = species,
+                            y = bill_depth_mm)) +
+  geom_bar(show.legend = FALSE, 
+           stat = "summary", 
+           fun = "mean") +
+  scale_fill_manual(values = banana_type_palette) +
+  theme_minimal(base_size = 16) +
+  labs(x = "",
+       y = "Time in the oven") +
+  theme(panel.grid = element_blank())
+
+duration_plot
+```
+
+
+## The Great Penguin Bake Off
+
+The penguins also baked their cakes for different amounts of time. Here are the mean durations per species. Which species left their cakes in the oven for longest?
+
+```{r}
+duration_plot +
+  coord_flip()
+```
+
+
+--- 
+
+![](images/penguin-bakeoff.png)
+
+## Seven tips to level up your plots {auto-animate=true}
+
+::: {.fragment}
+
+### <span style=color:#28A569>#1</span> - Use colour (and transparency) purposefully
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations 
+
+:::
+
+
+## Seven tips to level up your plots {auto-animate=true}
+
+### <span style=color:#28A569>#1</span> - Use colour (and transparency) purposefully {.faded}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.faded}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers 
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy 
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement 
+
+### <span style=color:#28A569>#6</span> - Highlight important data points 
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe 
+
+
+# Part 1 - Colour and orientation
+
+## <span style=color:#28A569>#1</span> - Use colour purposefully 
+
+Make it easy for the readers to remember what is what. 
+
+::: {.fragment}
+
+> *But my research isn't about bananas!*
+
+:::
+
+::: {.columns}
+
+::: {.column width=60%}
+
+::: {.fragment}
+
+```{r}
+#| echo: true
+#| results: hide
+#| fig-width: 6
+#| fig-height: 1.7
+
+machine <- "#061939"
+human <- "#e25470"
+monochromeR::generate_palette(machine, 
+                              blend_colour = human, 
+                              n_colours = 3, 
+                              view_palette = TRUE)
+```
+
+:::
+
+:::
+
+::: {.column width=35%}
+
+<br>
+<br>
+<br>
+
+::: {.fragment}
+![](images/machine.gif)
+:::
+
+:::
+:::
+
+
+# Let's get coding! {background=#2C3D4F}
+
+## A bit of housekeeping
+
+::: {.incremental}
+- Using Tidyverse style (mostly!)
+- `package::function()` rather than loading whole libraries (helps us see where everything comes from!)
+- `library(tidyverse)`
+- Apply the principles to your own plots during each exercise break - shout if you get stuck!
+- For each part, there's a script in `reference-scripts/` to show where we got to
+:::
+
+# Setting up our basic plot {visibility=hidden}
+
+## Setting up our basic plot
+
+We first let's modify the data, so that we have banana quantities to visualise!
+
+```{r}
+#| output-location: column-fragment
+#| echo: true
+#| code-line-numbers: "1-2|4|5-13|15-17"
+library(tidyverse)
+
+penguins <- palmerpenguins::penguins %>%
+  mutate(banana_quantity = 
+           case_when(
+             species == "Adelie" & 
+               island == "Biscoe" ~ 1,
+             species == "Adelie" & 
+               island == "Dream" ~ 0.6,
+             species == "Adelie" & 
+               island == "Torgersen" ~ 0,
+             TRUE ~ 1))
+
+penguins %>% 
+  select(species, island, banana_quantity) %>%
+  distinct()
+
+```
+
+## Setting up our basic plot
+
+Ripeness & quantities, baking duration (bill depth), yumminess (bill length)
+
+```{r}
+#| output-location: column-fragment
+#| echo: true
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "1|2|3|4|5"
+
+ggplot(penguins,
+       aes(x = bill_depth_mm,
+           y = bill_length_mm,
+           colour = species)) +
+  geom_point(aes(alpha = banana_quantity))
+
+```
+
+
+## Setting up our basic plot
+
+Ripeness & quantities, baking duration (bill depth), yumminess (bill length)
+
+```{r}
+#| output-location: column
+#| echo: true
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "6"
+
+ggplot(penguins,
+       aes(x = bill_depth_mm,
+           y = bill_length_mm,
+           colour = species)) +
+  geom_point(aes(alpha = banana_quantity)) +
+  theme_minimal()
+
+```
+
+
+
+## Setting up our basic plot {auto-animate=true}
+
+Ripeness & quantities, baking duration (bill depth), yumminess (bill length)
+
+```{r}
+#| output-location: column
+#| echo: true
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "6"
+
+ggplot(penguins,
+       aes(x = bill_depth_mm,
+           y = bill_length_mm,
+           colour = species)) +
+  geom_point(aes(alpha = banana_quantity)) +
+  theme_minimal(base_size = 12)
+
+```
+
+
+## Setting up our basic plot {auto-animate=true}
+
+Ripeness & quantities, baking duration (bill depth), yumminess (bill length)
+
+```{r}
+#| output-location: column
+#| echo: true
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "6-7"
+
+ggplot(penguins,
+       aes(x = bill_depth_mm,
+           y = bill_length_mm,
+           colour = species)) +
+  geom_point(aes(alpha = banana_quantity)) +
+  scale_alpha(range = c(0.2, 1),
+              breaks = c(0.1, 0.5, 1)) +
+  theme_minimal(base_size = 12)
+
+```
+
+
+
+## Setting up our basic plot {auto-animate=true}
+
+Ripeness & quantities, baking duration (bill depth), yumminess (bill length)
+
+```{r}
+#| output-location: column-fragment
+#| echo: true
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "6-13"
+basic_plot <- ggplot(penguins,
+                     aes(x = bill_depth_mm,
+                         y = bill_length_mm,
+                         colour = species)) +
+  geom_point(aes(alpha = banana_quantity)) +
+  labs(title = "Banana loaf tastes best when baked with ripe or over-ripe bananas",
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness.
+The Adelie penguins were given unripe bananas, Gentoos were given over-ripe 
+bananas and Chinstraps were given yellow bananas.
+Each penguin was left to choose their own cooking time.",
+x = "Baking time",
+y = "Yumminess",
+caption = "Data from {palmerpenguins}; misused for illustration purposes.") +
+  scale_alpha(range = c(0.2, 1),
+              breaks = c(0.1, 0.5, 1)) +
+  theme_minimal(base_size = 12)
+
+basic_plot
+
+```
+
+# Use colour purposefully {visibility=hidden}
+
+## <span style=color:#28A569>#1</span> - Use colour purposefully
+
+Adelie = Unripe, Chinstrap = Ripe, Gentoo = Over-ripe
+
+- Look for photos of bananas
+- Extract colours using [imagecolorpicker.com](imagecolorpicker.com)
+- Banana quantity taken care of by alpha (transparency)
+
+```{r}
+#| echo: false
+#| output-location: column-fragment
+#| results: hide
+#| fig-width: 10
+#| fig-height: 2
+
+banana_colours <- list("Adelie" = "#89973d",
+                       "Chinstrap" = "#e8b92f",
+                       "Gentoo" = "#a45e41")
+
+monochromeR::view_palette(banana_colours)
+
+```
+
+## <span style=color:#28A569>#1</span> - Use colour purposefully {auto-animate=true}
+
+The quick fix...
+
+```{r}
+#| echo: true
+#| output-location: column-fragment
+#| code-line-numbers: "7-9"
+ggplot(penguins, 
+       aes(x = bill_depth_mm,
+           y = bill_length_mm,
+           colour = species)) +
+  geom_point() +
+  theme_minimal() +
+  scale_colour_manual(values = c("#89973d", 
+                                 "#e8b92f", 
+                                 "#a45e41"))
+
+```
+
+
+
+## <span style=color:#28A569>#1</span> - Use colour purposefully {auto-animate=true}
+
+... might be a dangerous shortcut!
+
+```{r}
+#| echo: true
+#| output-location: column
+#| code-line-numbers: "2-8,14-16"
+ggplot(penguins %>% 
+         # Oh, that should be a factor, 
+         # let me fix that for you!
+         mutate(species = 
+                  factor(species, 
+                         levels = c("Chinstrap", 
+                                    "Gentoo", 
+                                    "Adelie"))), 
+       aes(x = bill_depth_mm,
+           y = bill_length_mm,
+           colour = species)) +
+  geom_point() +
+  theme_minimal() +
+  scale_colour_manual(values = c("#89973d", 
+                                 "#e8b92f", 
+                                 "#a45e41"))
+
+```
+
+
+
+## <span style=color:#28A569>#1</span> - Use colour purposefully {auto-animate=true}
+
+Create a named list!
+
+```{r}
+#| echo: true
+#| output-location: column
+#| results: hide
+
+banana_colours <- list("Adelie" = "#89973d",
+                       "Chinstrap" = "#e8b92f",
+                       "Gentoo" = "#a45e41")
+
+ggplot(penguins,
+       aes(x = bill_depth_mm,
+           y = bill_length_mm,
+           colour = species)) +
+  geom_point() +
+  theme_minimal() +
+  scale_colour_manual(values = banana_colours)
+
+```
+
+
+## <span style=color:#28A569>#1</span> - Use colour purposefully {auto-animate=true}
+
+Create a named list!
+
+```{r}
+#| echo: true
+#| output-location: column
+#| results: hide
+
+banana_colours <- list("Adelie" = "#89973d",
+                       "Chinstrap" = "#e8b92f",
+                       "Gentoo" = "#a45e41")
+
+ggplot(penguins %>% 
+         # Oh, that should be a factor, 
+         # let me fix that for you!
+         mutate(species = 
+                  factor(species, 
+                         levels = c("Chinstrap", 
+                                    "Gentoo", 
+                                    "Adelie"))), 
+       aes(x = bill_depth_mm,
+           y = bill_length_mm,
+           colour = species)) +
+  geom_point() +
+  theme_minimal() +
+  scale_colour_manual(values = banana_colours)
+
+
+```
+
+## <span style=color:#28A569>#1</span> - Use colour purposefully {auto-animate=true}
+
+Create a named list!
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+banana_colours <- list("Adelie" = "#89973d",
+                       "Chinstrap" = "#e8b92f",
+                       "Gentoo" = "#a45e41")
+
+basic_plot +
+  scale_colour_manual(values = banana_colours)
+
+```
+
+## <span style=color:#28A569>#1</span> - Use colour purposefully
+
+**Choosing colours is tricky!**
+
+Here are a few starting points... 
+
+::: {.incremental}
+- Your department brand guidelines
+- A photo + something like [imagecolorpicker.com](https://imagecolorpicker.com/) to pick out colours
+- Take inspiration from other dataviz / art you like
+- Google images and "[whatever you like] palette" 
+- Or... start from the colour wheel and read around how best to use it
+- Using a tool like [paletton.com](https://paletton.com/) makes it easier!
+:::
+
+::: footer
+Find out more: [blog.datawrapper.de/colors-for-data-vis-style-guides/](https://blog.datawrapper.de/colors-for-data-vis-style-guides/)
+:::
+
+## <span style=color:#28A569>#1</span> - Use colour purposefully
+
+::: {.columns}
+::: {.column width=50%}
+![](https://github.com/cararthompson/tidytuesdays/raw/master/plots/202209_lego.png)
+:::
+
+::: {.column width=50%}
+::: {.fragment}
+![](https://www.lego.com/cdn/cs/set/assets/blt9c69d4a46c794509/21330_box1.jpg?fit=bounds&format=jpg&quality=80&width=528&height=528&dpr=1)
+:::
+:::
+:::
+
+
+## <span style=color:#28A569>#1</span> - Use colour purposefully
+
+::: {.columns}
+::: {.column width=50%}
+![](https://github.com/cararthompson/tidytuesdays/raw/master/plots/202210_gbbo.png)
+:::
+
+::: {.column width=50%}
+::: {.fragment}
+![](https://ic.c4assets.com/brands/the-great-british-bake-off/series-5/episode-1/5ce2f514-5ab0-4317-b0a0-a349a13fbc68.jpg?interpolation=progressive-bicubic&output-format=jpeg&output-quality=90{&resize})
+:::
+:::
+:::
+
+## <span style=color:#28A569>#1</span> - Use colour purposefully
+
+::: {.incremental}
+- Think about accessibility / printing in black and white
+- Fewer colours, more light/dark shades
+- From darker colours to lighter colours
+- Apply semantics / consistency for clearer storytelling
+::: 
+
+
+## <span style=color:#28A569>#1</span> - Use colour purposefully {background=#2C3D4F}
+
+::: {.columns}
+
+::: {.column width=50%}
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot
+```
+:::
+::: {.column width=50%}
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours)
+```
+:::
+
+:::
+
+# Use intuitive orientations {visibility=hidden}
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.imitate-title}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations 
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers 
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy 
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement 
+
+### <span style=color:#28A569>#6</span> - Highlight important data points 
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe 
+
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.faded-small}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.imitate-title}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers 
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy 
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement 
+
+### <span style=color:#28A569>#6</span> - Highlight important data points 
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe 
+
+
+## <span style=color:#28A569>#2</span> - Use intuitive orientations
+
+```{r}
+#| output-location: column
+#| echo: true
+#| fig-width: 6
+#| fig-height: 4
+
+duration_plot
+
+```
+
+
+## <span style=color:#28A569>#2</span> - Use intuitive orientations
+
+```{r}
+#| output-location: column
+#| echo: true
+#| fig-width: 6
+#| fig-height: 4
+#| code-line-numbers: "2"
+
+duration_plot +
+  coord_flip()
+
+```
+
+
+## <span style=color:#28A569>#2</span> - Use intuitive orientations
+
+We've done this already!
+
+::: {.fragment}
+::: columns
+::: {.column width="50%"}
+
+<br>
+
+```{r}
+#| eval: false
+#| code-line-numbers: "2-3"
+#| echo: true
+
+ggplot(penguins,
+       aes(x = bill_depth_mm,  # Duration
+           y = bill_length_mm, # Yumminess
+           colour = species))
+
+```
+:::
+
+:::{.column width="50%"}
+![](images/clapping-pingu.gif)
+:::
+:::
+:::
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.faded-small}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.imitate-title}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement
+
+### <span style=color:#28A569>#6</span> - Highlight important data points
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe
+
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.imitate-title}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.imitate-title}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers {.faded-small}
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy {.faded-small}
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement {.faded-small}
+
+### <span style=color:#28A569>#6</span> - Highlight important data points {.faded-small}
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe {.faded-small}
+
+
+# Over to you! 
+
+- Check the orientation of your plot
+- Choose a colour scheme
+- Apply it to your plot using a named list
+
+**See you in 15 minutes!**  📊 🎨 ☕  
+
+```{r}
+countdown::countdown(minutes = 15L, warn_when = 180, style = "border-color: #28A569")
+```
+
+
+# Add colour to text {visibility=hidden}
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.imitate-title}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.imitate-title}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement
+
+### <span style=color:#28A569>#6</span> - Highlight important data points
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe
+
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.faded-small}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.faded-small}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers {.imitate-title}
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement
+
+### <span style=color:#28A569>#6</span> - Highlight important data points
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe
+
+
+## <span style=color:#28A569>#3</span> - Add colour to text {auto-animate=true}
+
+Say hello to 📦 `{ggtext}`
+
+## <span style=color:#28A569>#3</span> - Add colour to text {auto-animate=true}
+
+Say hello to 📦 `{ggtext}`
+
+```{r}
+#| echo: true
+#| output-location: column-fragment
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "4-7"
+
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0(
+    "Banana loaf tastes best when baked with ",
+    "<span style=\"color:", banana_colours$Chinstrap,
+    "\">ripe</span> or <span style=\"color:",
+    banana_colours$Gentoo, "\">over-ripe</span> bananas"))
+
+```
+
+
+
+## <span style=color:#28A569>#3</span> - Add colour to text {auto-animate=true}
+
+Say hello to 📦 `{ggtext}`
+
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "8"
+
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0(
+    "Banana loaf tastes best when baked with ",
+    "<span style=\"color:", banana_colours$Chinstrap,
+    "\">ripe</span> or <span style=\"color:",
+    banana_colours$Gentoo, "\">over-ripe</span> bananas")) +
+  theme(plot.title = ggtext::element_markdown())
+
+```
+
+
+## <span style=color:#28A569>#3</span> - Add colour to text {auto-animate=true}
+
+When using colour, make sure the text is still readable; use "bold" if needed
+
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "6-7"
+
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0(
+    "Banana loaf tastes best when baked with ",
+    "<span style=\"color:", banana_colours$Chinstrap,
+    "\">**ripe**</span> or <span style=\"color:",
+    banana_colours$Gentoo, "\">**over-ripe**</span> bananas")) +
+  theme(plot.title = ggtext::element_markdown())
+
+```
+
+## <span style=color:#28A569>#3</span> - Add colour to text {auto-animate=true background=#2C3D4F}
+
+::: {.columns}
+
+::: {.column width=50%}
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours)
+
+```
+
+:::
+
+::: {.column width=50%}
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0(
+    "Banana loaf tastes best when baked with ",
+    "<span style=\"color:", banana_colours$Chinstrap,
+    "\">**ripe**</span> or <span style=\"color:",
+    banana_colours$Gentoo, "\">**over-ripe**</span> bananas")) +
+  theme(plot.title = ggtext::element_markdown())
+
+```
+:::
+
+:::
+
+# Add text hierarchy {visibility=hidden}
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.faded-small}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.faded-small}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers  {.imitate-title}
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement
+
+### <span style=color:#28A569>#6</span> - Highlight important data points
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe
+
+
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.faded-small}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.faded-small}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers {.faded-small}
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy {.imitate-title}
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement
+
+### <span style=color:#28A569>#6</span> - Highlight important data points
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe
+
+
+
+## <span style=color:#28A569>#4</span> - Add text hierarchy
+
+::: {.fragment}
+
+![](https://public-images.interaction-design.org/literature/articles/materials/0B2CNUOVN6c9pyGDHu5152HWB4dbdevsDWj0QBNK.jpg)
+
+:::
+
+::: footer
+Find out more: [https://www.interaction-design.org/](https://www.interaction-design.org/literature/article/the-ux-designer-s-guide-to-typography)
+:::
+
+## <span style=color:#28A569>#4</span> - Add text hierarchy {auto-animate=true}
+
+Two more colours for our palette
+- Starting from the main banana colour, we go darker for dark text
+- We then go lighter from there to create a light text colour
+
+```{r}
+#| echo: true
+#| output-location: column-fragment
+#| results: hide
+
+dark_text <- monochromeR::generate_palette(
+  banana_colours$Chinstrap, "go_darker",
+  n_colours = 2)[2]
+
+light_text <-  monochromeR::generate_palette(
+  dark_text, "go_lighter",
+  n_colours = 3)[2]
+
+banana_colours <- list("Adelie" = "#89973d",
+                       "Chinstrap" = "#e8b92f",
+                       "Gentoo" = "#a45e41",
+                       "dark_text" = dark_text,
+                       "light_text" = light_text)
+
+monochromeR::view_palette(banana_colours)
+```
+
+
+## <span style=color:#28A569>#4</span> - Add text hierarchy {auto-animate=true}
+
+Make sure they don't appear in the legend! 
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "3"
+basic_plot +
+  scale_colour_manual(values = banana_colours,
+                      limits = force) +
+  labs(title = paste0(
+    "Banana loaf tastes best when baked with ",
+    "<span style=\"color:", banana_colours$Chinstrap,
+    "\">**ripe**</span> or <span style=\"color:",
+    banana_colours$Gentoo, "\">**over-ripe**</span> bananas")) +
+  theme(plot.title = ggtext::element_markdown())
+
+```
+
+
+## <span style=color:#28A569>#4</span> - Add text hierarchy {auto-animate=true}
+
+Add a base colour and font for text
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "8-9"
+
+basic_plot +
+  scale_colour_manual(values = banana_colours, limits = force) +
+  labs(title = paste0(
+    "Banana loaf tastes best when baked with ",
+    "<span style=\"color:", banana_colours$Chinstrap,
+    "\">**ripe**</span> or <span style=\"color:",
+    banana_colours$Gentoo, "\">**over-ripe**</span> bananas")) +
+  theme(text = element_text(family = "Cabin",
+                            colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown())
+
+```
+
+
+## <span style=color:#28A569>#4</span> - Add text hierarchy {auto-animate=true}
+
+Override it in the title and change the font and size of the title
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "10"
+basic_plot +
+  scale_colour_manual(values = banana_colours, limits = force) +
+  labs(title = paste0(
+    "Banana loaf tastes best when baked with ",
+    "<span style=\"color:", banana_colours$Chinstrap,
+    "\">**ripe**</span> or <span style=\"color:",
+    banana_colours$Gentoo, "\">**over-ripe**</span> bananas")) +
+  theme(text = element_text(family = "Cabin",
+                            colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(colour = banana_colours$dark_text))
+```
+
+
+## <span style=color:#28A569>#4</span> - Add text hierarchy {auto-animate=true}
+
+Shift to `ggsave()` to avoid disappointment when rendering output! 
+
+Text size changes between the Viewer and the exported plot, dependent on plot size and resolution. Set these before you spend too much time fine-tuning your text!
+
+```{r}
+#| echo: true
+#| eval: false
+ggsave(filename = "penguin-bakeoff.png", 
+       width = 8, height = 7.5, dpi = 400, bg = "#FFFFFF")
+
+```
+
+## <span style=color:#28A569>#4</span> - Add text hierarchy {auto-animate=true}
+
+Add a line`<br>`eak where needed!
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "6"
+basic_plot +
+  scale_colour_manual(values = banana_colours, limits = force) +
+  labs(title = paste0(
+    "Banana loaf tastes best when baked with ",
+    "<span style=\"color:", banana_colours$Chinstrap,
+    "\">**ripe**</span> or<br><span style=\"color:",
+    banana_colours$Gentoo, "\">**over-ripe**</span> bananas")) +
+  theme(text = element_text(family = "Cabin",
+                            colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(
+          size = 18,
+          family = "Poppins",
+          colour = banana_colours$dark_text,
+          face = "bold")
+  )
+```
+
+
+## <span style=color:#28A569>#4</span> - Add text hierarchy {auto-animate=true}
+
+Apply the same principle to the axes and caption
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "15-16"
+basic_plot +
+  scale_colour_manual(values = banana_colours, limits = force) +
+  labs(title = paste0(
+    "Banana loaf tastes best when baked with ",
+    "<span style=\"color:", banana_colours$Chinstrap,
+    "\">ripe</span> or<br><span style=\"color:",
+    banana_colours$Gentoo, "\">over-ripe</span> bananas")) +
+  theme(text = element_text(family = "Cabin",
+                            colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(
+          size = 18,
+          family = "Poppins",
+          colour = banana_colours$dark_text,
+          face = "bold"),
+        axis.text = element_text(size = 6,
+                                 colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6))
+```
+
+## <span style=color:#28A569>#4</span> - Add text hierarchy
+
+Getting custom fonts to work can be frustrating!
+
+> Install fonts locally + `{ragg}` + `{systemfonts}` + `{textshaping}` + Set graphics device to "AGG" + 🤞
+
+
+![](https://c.tenor.com/OBcV0-r69mYAAAAC/throwing-computer-ron-swanson.gif)
+<br>
+
+::: {.fragment}
+See `reference-scripts/02_setting-up-fonts.R` to get you started!
+:::
+
+::: footer
+Find out more: [yjunechoe.github.io/posts/2021-06-24-setting-up-and-debugging-custom-fonts/](https://yjunechoe.github.io/posts/2021-06-24-setting-up-and-debugging-custom-fonts/)
+:::
+
+
+## <span style=color:#28A569>#4</span> - Add text hierarchy
+
+Choosing fonts can be tricky!
+
+::: {.incremental}
+- Brand guidelines
+- [Datawrapper guidance](https://blog.datawrapper.de/fonts-for-data-visualization/) - avoid fonts that are too wide/narrow! 
+- Websites + inspector tool
+- Oliver Schöndorfer's exploration of the [Font Matrix](https://pimpmytype.com/font-matrix/)
+:::
+
+<center>
+::: {.fragment}
+![](https://pimpmytype.com/wp-content/uploads/2022/05/font-matrix-14-matches-columns-update.png){width=50%}
+:::
+</center>
+
+::: footer
+Find out more: [pimpmytype.com/font-matrix/](https://pimpmytype.com/font-matrix/)
+:::
+
+
+## <span style=color:#28A569>#4</span> - Add text hierarchy {auto-animate=true background=#2C3D4F}
+
+::: {.columns}
+
+::: {.column width=50%}
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours, limits = force) +
+  labs(title = paste0(
+    "Banana loaf tastes best when baked with ",
+    "<span style=\"color:", banana_colours$Chinstrap,
+    "\">**ripe**</span> or <span style=\"color:",
+    banana_colours$Gentoo, "\">**over-ripe**</span> bananas")) +
+  theme(plot.title = ggtext::element_markdown())
+
+```
+
+:::
+
+::: {.column width=50%}
+
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours, limits = force) +
+  labs(title = paste0(
+    "Banana loaf tastes best when baked with ",
+    "<span style=\"color:", banana_colours$Chinstrap,
+    "\">ripe</span> or<br><span style=\"color:",
+    banana_colours$Gentoo, "; font-size=7\">over-ripe</span> bananas")) +
+  theme(text = element_text(family = "Cabin",
+                            colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(
+          size = 18,
+          family = "Poppins",
+          colour = banana_colours$dark_text,
+          face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6))
+```
+
+:::
+:::
+
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.faded-small}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.faded-small}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers {.imitate-title}
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy {.imitate-title}
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement 
+
+### <span style=color:#28A569>#6</span> - Highlight important data points 
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe 
+
+# Over to you! 
+
+- Think about the main message of your plot
+- Choose a font (or two); use `systemfonts::system_fonts()` to see what's installed already
+- Add some text-hierarchy colours to your colour scheme
+- Apply the colours to the different `theme()` elements
+
+**See you in 15 minutes!** 🎨 🖋️ ☕ 
+
+```{r}
+countdown::countdown(minutes = 15L, warn_when = 180, style = "border-color: #28A569")
+```
+
+# Part 3 - Annotations
+
+# Reduce unnecessary eye movement {visibility=hidden}
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.faded-small}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.faded-small}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers {.imitate-title}
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy {.imitate-title}
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement 
+
+### <span style=color:#28A569>#6</span> - Highlight important data points 
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe 
+
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.faded-small}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.faded-small}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers {.faded-small}
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy {.faded-small}
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement {.imitate-title}
+
+### <span style=color:#28A569>#6</span> - Highlight important data points 
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe 
+
+
+## <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours, limits = force) +
+  labs(title = paste0(
+    "Banana loaf tastes best when baked with ",
+    "<span style=\"color:", banana_colours$Chinstrap, 
+    "\">ripe</span> or<br><span style=\"color:",
+    banana_colours$Gentoo, "\">over-ripe</span> bananas")) +
+  theme(text = element_text(family = "Cabin", 
+                            colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, 
+                                              family = "Poppins", 
+                                              colour = banana_colours$dark_text, 
+                                              face = "bold"),
+        axis.text = element_text(size = 6,
+                                 colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6))
+```
+
+
+## <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement
+
+Combine all the above to create text boxes instead of a legend!
+
+::: fragment
+```{r}
+#| echo: true
+# Create a new tibble
+penguin_summaries <- palmerpenguins::penguins %>%
+  group_by(species) %>%
+  summarise(bill_depth_mm = mean(bill_depth_mm, na.rm = TRUE),
+            bill_length_mm = mean(bill_length_mm, na.rm = TRUE)) %>%
+  mutate(commentary = case_when(species == "Adelie" ~
+                                  "The Adelie penguins tried varying the amount of banana in the mix.
+                                Turns out, even a hint of green banana is detrimental to yumminess!",
+                                species == "Gentoo" ~
+                                  "Over-ripe bananas and typically shorter baking times.",
+                                TRUE ~ "Ripe bananas and slightly longer cooking times."))
+
+```
+::: 
+
+
+## <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement {auto-animate=true}
+
+Combine all the above to create text boxes instead of a legend!
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours, limits = force) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas")) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6))
+```
+
+
+
+## <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement {auto-animate=true}
+
+Combine all the above to create text boxes instead of a legend!
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "4-9"
+basic_plot +
+  scale_colour_manual(values = banana_colours, limits = force) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas")) +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0(
+                         "**Team ", species, "**",
+                         "<br><span style = \"color:",
+                         banana_colours$light_text,
+                         "\">", commentary, "</span>"))) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6))
+```
+
+
+
+## <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement {auto-animate=true}
+
+Combine all the above to create text boxes instead of a legend!
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "10-14"
+basic_plot +
+  scale_colour_manual(values = banana_colours, limits = force) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas")) +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0(
+                         "**Team ", species, "**",
+                         "<br><span style = \"color:",
+                         banana_colours$light_text,
+                         "\">", commentary, "</span>")),
+                       family = "Cabin",
+                       size = 3.5,
+                       width = unit(9, "line"),
+                       alpha = 0.9,
+                       box.colour = NA) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6))
+```
+
+
+
+## <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement {auto-animate=true}
+
+Combine all the above to create text boxes instead of a legend!
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "4-5,21"
+basic_plot +
+  scale_colour_manual(values = banana_colours, limits = force) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness.
+Each penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0(
+                         "**Team ", species, "**",
+                         "<br><span style = \"color:",
+                         banana_colours$light_text,
+                         "\">", commentary, "</span>")),
+                       family = "Cabin",
+                       size = 3.5,
+                       width = unit(9, "line"),
+                       alpha = 0.9,
+                       box.colour = NA) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        legend.position = "none")
+```
+
+## <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement {background=#2C3D4F}
+
+::: {.columns}
+
+::: {.column width=50%}
+
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours, limits = force) +
+  labs(title = paste0(
+    "Banana loaf tastes best when baked with ",
+    "<span style=\"color:", banana_colours$Chinstrap, 
+    "\">ripe</span> or<br><span style=\"color:",
+    banana_colours$Gentoo, "; font-size=7\">over-ripe</span> bananas")) +
+  theme(text = element_text(family = "Cabin", 
+                            colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(
+          size = 18, 
+          family = "Poppins", 
+          colour = banana_colours$dark_text, 
+          face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6))
+```
+
+:::
+
+::: {.column width=50%}
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours, limits = force) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness.
+Each penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0(
+                         "**Team ", species, "**",
+                         "<br><span style = \"color:",
+                         banana_colours$light_text,
+                         "\">", commentary, "</span>")),
+                       family = "Cabin",
+                       size = 3.5,
+                       width = unit(9, "line"),
+                       alpha = 0.9,
+                       box.colour = NA) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        legend.position = "none")
+```
+
+
+:::
+
+:::
+
+# Highlight important data points {visibility=hidden}
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.faded-small}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.faded-small}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers {.faded-small}
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy {.faded-small}
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement {.imitate-title}
+
+### <span style=color:#28A569>#6</span> - Highlight important data points 
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe 
+
+
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.faded-small}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.faded-small}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers {.faded-small}
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy {.faded-small}
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement {.faded-small}
+
+### <span style=color:#28A569>#6</span> - Highlight important data points {.imitate-title}
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe 
+
+
+## <span style=color:#28A569>#6</span> - Highlight important data points
+
+To find the coordinates of the points you want to highlight, try `plotly::ggplotly()`!
+
+
+## <span style=color:#28A569>#6</span> - Highlight important data points {auto-animate=true}
+
+First, a bit of text manipulation!
+
+```{r}
+#| echo: true
+#| code-line-numbers: "2-5|6-9"
+penguin_highlights <- palmerpenguins::penguins_raw %>%
+  # Housekeeping
+  janitor::clean_names() %>%
+  rename(bill_depth_mm = culmen_depth_mm,
+         bill_length_mm = culmen_length_mm) %>%
+  # Find star baker, runner up and lowest score
+  filter(bill_length_mm %in% c(max(bill_length_mm, na.rm = TRUE),
+                               sort(bill_length_mm, decreasing = TRUE)[2],
+                               min(bill_length_mm, na.rm = TRUE))) 
+```
+
+
+## <span style=color:#28A569>#6</span> - Highlight important data points {auto-animate=true}
+
+First, a bit of text manipulation!
+
+```{r}
+#| echo: true
+#| code-line-numbers: "8-10"
+penguin_highlights <- palmerpenguins::penguins_raw %>%
+  janitor::clean_names() %>%
+  rename(bill_depth_mm = culmen_depth_mm,
+         bill_length_mm = culmen_length_mm) %>%
+  filter(bill_length_mm %in% c(max(bill_length_mm, na.rm = TRUE),
+                               sort(bill_length_mm, decreasing = TRUE)[2],
+                               min(bill_length_mm, na.rm = TRUE))) %>%
+  # More housekeeping
+  mutate(species = gsub("(.) (.*)", "\\1", species))
+
+```
+
+<br>
+
+::: fragment
+
+```{r}
+#| echo: true
+raw_species <- unique(palmerpenguins::penguins_raw$Species)
+raw_species
+
+gsub("(.) (.*)", "\\1", raw_species)
+
+```
+:::
+
+## <span style=color:#28A569>#6</span> - Highlight important data points {auto-animate=true}
+
+First, a bit of text manipulation!
+
+```{r}
+#| echo: true
+#| code-line-numbers: "10-21"
+penguin_highlights <- palmerpenguins::penguins_raw %>%
+  janitor::clean_names() %>%
+  rename(bill_depth_mm = culmen_depth_mm,
+         bill_length_mm = culmen_length_mm) %>%
+  filter(bill_length_mm %in% c(max(bill_length_mm, na.rm = TRUE),
+                               sort(bill_length_mm, decreasing = TRUE)[2],
+                               min(bill_length_mm, na.rm = TRUE))) %>%
+  mutate(species = gsub("(.) (.*)", "\\1", species),
+         # Add commentary!
+         commentary = case_when(
+           bill_length_mm == max(bill_length_mm) ~
+             paste0("Our star baker is **", individual_id,
+                    "**, a ", species, " from ", island,
+                    ". Congratulations, ", individual_id, "!"),
+           bill_length_mm == sort(bill_length_mm, decreasing = TRUE)[2] ~
+             paste0("Our runner up is a ", species,
+                    " from ", island, ": **", individual_id,
+                    "**, proving that ripe and over-ripe bananas are both good options!"),
+           TRUE ~ paste0("**", individual_id,
+                         "**, did not have a good baking day. The combination of short cooking time and green bananas probably didn't help!")))
+
+```
+
+## <span style=color:#28A569>#6</span> - Highlight important data points {auto-animate=true chalkboard-buttons=true}
+
+Next, let's work out where we want our labels...
+
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness.
+Each penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0(
+                         "**Team ", species, "**",
+                         "<br><span style = \"color:",
+                         banana_colours$light_text,
+                         "\">", commentary, "</span>")),
+                       family = "Cabin",
+                       size = 3.5,
+                       width = unit(9, "line"),
+                       alpha = 0.9,
+                       box.colour = NA) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        legend.position = "none")
+```
+
+
+
+## <span style=color:#28A569>#6</span> - Highlight important data points {auto-animate=true}
+
+... and add box coordinates and text alignment to our data
+
+```{r}
+#| echo: true
+#| code-line-numbers: "8-9|17-21|22-25"
+penguin_highlights <- palmerpenguins::penguins_raw %>%
+  janitor::clean_names() %>%
+  rename(bill_depth_mm = culmen_depth_mm,
+         bill_length_mm = culmen_length_mm) %>%
+  filter(bill_length_mm %in% c(max(bill_length_mm, na.rm = TRUE),
+                               sort(bill_length_mm, decreasing = TRUE)[2],
+                               min(bill_length_mm, na.rm = TRUE))) %>%
+  # more housekeeping!
+  arrange(bill_length_mm) %>%
+  mutate(species = gsub("(.) (.*)", "\\1", species),
+         commentary = case_when(
+           bill_length_mm == max(bill_length_mm) ~
+             paste0("Our star baker is **", individual_id, "**, a ", species, " from ", island, ". Congratulations, ", individual_id, "!"),
+           bill_length_mm == sort(bill_length_mm, decreasing = TRUE)[2] ~
+             paste0("Our runner up is a ", species, " from ", island, ": **", individual_id, "**, proving that ripe and over-ripe bananas are both good options!"),
+           TRUE ~ paste0("**", individual_id, "**, did not have a good baking day. The combination of short cooking time and green bananas probably didn't help!")),
+         # Add label and arrow coordinates
+         label_x = c(15, 18.15, 16.45),
+         label_y = c(34, 57, 59),
+         left_to_right = case_when(label_x < bill_depth_mm ~ 1,
+                                   TRUE ~ 0),
+         arrow_x_end = case_when(label_x < bill_depth_mm ~ bill_depth_mm - 0.1,
+                                 TRUE ~ bill_depth_mm + 0.1),
+         arrow_y_end = case_when(label_y < bill_length_mm ~ bill_length_mm - 0.1,
+                                 TRUE ~ bill_length_mm + 0.1))
+
+```
+
+::: footer
+Find out more: [cararthompson.com/posts/2021-09-02-alignment-cheat-sheet/](https://www.cararthompson.com/posts/2021-09-02-alignment-cheat-sheet/)
+:::
+
+## <span style=color:#28A569>#6</span> - Highlight important data points {auto-animate=true}
+
+Let's add the annotations...
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness. \nEach penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0("**Team ", species, "**", "<br><span style = \"color:", banana_colours$light_text, "\">", commentary, "</span>")),
+                       family = "Cabin", size = 3.5, width = unit(9, "line"), alpha = 0.9, box.colour = NA) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        legend.position = "none")
+```
+
+
+## <span style=color:#28A569>#6</span> - Highlight important data points {auto-animate=true}
+
+Let's add the annotations...
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "8-17"
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness. \nEach penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0("**Team ", species, "**", "<br><span style = \"color:", banana_colours$light_text, "\">", commentary, "</span>")),
+                       family = "Cabin", size = 3.5, width = unit(9, "line"), alpha = 0.9, box.colour = NA) +
+  ggtext::geom_textbox(data = penguin_highlights,
+                       aes(label = commentary,
+                           x = label_x,
+                           y = label_y,
+                           # alignment of the box with the box coordinate
+                           hjust = left_to_right),
+                       family = "Cabin", 
+                       size = 3,
+                       fill = NA,
+                       box.colour = NA) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        legend.position = "none")
+```
+
+
+
+## <span style=color:#28A569>#6</span> - Highlight important data points {auto-animate=true}
+
+... using **arrows** and **alignments** to emphasise the story
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "11-16"
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness. \nEach penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0("**Team ", species, "**", "<br><span style = \"color:", banana_colours$light_text, "\">", commentary, "</span>")),
+                       family = "Cabin", size = 3.5, width = unit(9, "line"), alpha = 0.9, box.colour = NA) +
+  ggtext::geom_textbox(data = penguin_highlights,
+                       aes(label = commentary, x = label_x, y = label_y, hjust = left_to_right),
+                       family = "Cabin", size = 3, fill = NA, box.colour = NA) +
+  geom_curve(data = penguin_highlights,
+             aes(x = label_x, xend = arrow_x_end,
+                 y = label_y, yend = arrow_y_end),
+             arrow = arrow(length = unit(0.1, "cm")),
+             curvature = 0.15,
+             alpha = 0.5) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        legend.position = "none")
+```
+
+
+## <span style=color:#28A569>#6</span> - Highlight important data points {auto-animate=true}
+
+... using **arrows** and **alignments** to emphasise the story
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "10"
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness. \nEach penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0("**Team ", species, "**", "<br><span style = \"color:", banana_colours$light_text, "\">", commentary, "</span>")),
+                       family = "Cabin", size = 3.5, width = unit(9, "line"), alpha = 0.9, box.colour = NA) +
+  ggtext::geom_textbox(data = penguin_highlights,
+                       aes(label = commentary, x = label_x, y = label_y, hjust = left_to_right,
+                           halign = left_to_right),
+                       family = "Cabin", size = 3, fill = NA, box.colour = NA) +
+  geom_curve(data = penguin_highlights,
+             aes(x = label_x, xend = arrow_x_end,
+                 y = label_y, yend = arrow_y_end),
+             arrow = arrow(length = unit(0.1, "cm")),
+             curvature = 0.15,
+             alpha = 0.5) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        legend.position = "none")
+```
+
+## <span style=color:#28A569>#6</span> - Highlight important data points {background=#2C3D4F}
+
+:::{.columns}
+
+:::{.column width=50%}
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness.
+Each penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0("**Team ", species, "**", "<br><span style = \"color:", banana_colours$light_text, "\">", commentary, "</span>")),
+                       family = "Cabin",
+                       size = 3.5,
+                       width = unit(9, "line"),
+                       alpha = 0.9,
+                       box.colour = NA) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        legend.position = "none")
+```
+
+:::
+
+:::{.column width=50%}
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness. \nEach penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0("**Team ", species, "**", "<br><span style = \"color:", banana_colours$light_text, "\">", commentary, "</span>")),
+                       family = "Cabin", size = 3.5, width = unit(9, "line"), alpha = 0.9, box.colour = NA) +
+  ggtext::geom_textbox(data = penguin_highlights,
+                       aes(label = commentary, x = label_x, y = label_y, 
+                           hjust = left_to_right, halign = left_to_right),
+                       family = "Cabin", size = 3, fill = NA, box.colour = NA) +
+  geom_curve(data = penguin_highlights,
+             aes(x = label_x, xend = arrow_x_end,
+                 y = label_y, yend = arrow_y_end),
+             arrow = arrow(length = unit(0.1, "cm")),
+             curvature = 0.15,
+             alpha = 0.5) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        legend.position = "none")
+```
+:::
+
+:::
+
+# Give everything space to breathe {visibility=hidden}
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.faded-small}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.faded-small}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers {.faded-small}
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy {.faded-small}
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement {.faded-small}
+
+### <span style=color:#28A569>#6</span> - Highlight important data points {.imitate-title}
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe 
+
+
+## {auto-animate=true background=#2C3D4F}
+
+### <span style=color:#28A569>#1</span> - Use colour purposefully {.faded-small}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.faded-small}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers {.faded-small}
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy {.faded-small}
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement {.faded-small}
+
+### <span style=color:#28A569>#6</span> - Highlight important data points {.faded-small}
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe {.imitate-title}
+
+
+
+## <span style=color:#28A569>#7</span> - Give everything some space to breathe
+
+<br>
+
+![](https://gifimage.net/wp-content/uploads/2018/04/out-of-breath-gif-11.gif)
+
+<br>
+
+## <span style=color:#28A569>#7</span> - Give everything some space to breathe {auto-animate=true}
+
+Increase lineheight, reduce distractions
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness. \nEach penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0("**Team ", species, "**", "<br><span style = \"color:", banana_colours$light_text, "\">", commentary, "</span>")),
+                       family = "Cabin", size = 3.5, width = unit(9, "line"), alpha = 0.9, box.colour = NA) +
+  ggtext::geom_textbox(data = penguin_highlights,
+                       aes(label = commentary, x = label_x, y = label_y, hjust = left_to_right, halign = left_to_right),
+                       family = "Cabin", size = 3, fill = NA, box.colour = NA) +
+  geom_curve(data = penguin_highlights,
+             aes(x = label_x, xend = arrow_x_end, y = label_y, yend = arrow_y_end),
+             arrow = arrow(length = unit(0.1, "cm")), curvature = 0.15, alpha = 0.5) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        legend.position = "none")
+```
+
+
+## <span style=color:#28A569>#7</span> - Give everything some space to breathe {auto-animate=true}
+
+Increase lineheight, reduce distractions
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "15"
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness. \nEach penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0("**Team ", species, "**", "<br><span style = \"color:", banana_colours$light_text, "\">", commentary, "</span>")),
+                       family = "Cabin", size = 3.5, width = unit(9, "line"), alpha = 0.9, box.colour = NA) +
+  ggtext::geom_textbox(data = penguin_highlights,
+                       aes(label = commentary, x = label_x, y = label_y, hjust = left_to_right, halign = left_to_right),
+                       family = "Cabin", size = 3, fill = NA, box.colour = NA) +
+  geom_curve(data = penguin_highlights,
+             aes(x = label_x, xend = arrow_x_end, y = label_y, yend = arrow_y_end),
+             arrow = arrow(length = unit(0.1, "cm")), curvature = 0.15, alpha = 0.5) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text,
+                            lineheight = 1.2),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        legend.position = "none")
+```
+
+
+## <span style=color:#28A569>#7</span> - Give everything some space to breathe {auto-animate=true}
+
+Increase lineheight, reduce distractions
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "19"
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness. \nEach penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0("**Team ", species, "**", "<br><span style = \"color:", banana_colours$light_text, "\">", commentary, "</span>")),
+                       family = "Cabin", size = 3.5, width = unit(9, "line"), alpha = 0.9, box.colour = NA) +
+  ggtext::geom_textbox(data = penguin_highlights,
+                       aes(label = commentary, x = label_x, y = label_y, hjust = left_to_right, halign = left_to_right),
+                       family = "Cabin", size = 3, fill = NA, box.colour = NA) +
+  geom_curve(data = penguin_highlights,
+             aes(x = label_x, xend = arrow_x_end, y = label_y, yend = arrow_y_end),
+             arrow = arrow(length = unit(0.1, "cm")), curvature = 0.15, alpha = 0.5) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text,
+                            lineheight = 1.2),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        panel.grid = element_line(colour = "#F6F6F5"),
+        legend.position = "none")
+```
+
+
+
+## <span style=color:#28A569>#7</span> - Give everything some space to breathe {auto-animate=true}
+
+Increase lineheight, reduce distractions, check everything fits!
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-width: 7
+#| fig-height: 6
+#| code-line-numbers: "14"
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness. \nEach penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0("**Team ", species, "**", "<br><span style = \"color:", banana_colours$light_text, "\">", commentary, "</span>")),
+                       family = "Cabin", size = 3.5, width = unit(9, "line"), alpha = 0.9, box.colour = NA) +
+  ggtext::geom_textbox(data = penguin_highlights,
+                       aes(label = commentary, x = label_x, y = label_y, hjust = left_to_right, halign = left_to_right),
+                       family = "Cabin", size = 3, fill = NA, box.colour = NA) +
+  geom_curve(data = penguin_highlights,
+             aes(x = label_x, xend = arrow_x_end, y = label_y, yend = arrow_y_end),
+             arrow = arrow(length = unit(0.1, "cm")), curvature = 0.15, alpha = 0.5) +
+  scale_x_continuous(expand = expansion(mult = c(0.2, 0.02))) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text,
+                            lineheight = 1.2),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        panel.grid = element_line(colour = "#F6F6F5"),
+        legend.position = "none")
+```
+
+
+## <span style=color:#28A569>#7</span> - Give everything some space to breathe {background=#2C3D4F}
+
+::: {.columns}
+
+::: {.column width=50%}
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness. \nEach penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0("**Team ", species, "**", "<br><span style = \"color:", banana_colours$light_text, "\">", commentary, "</span>")),
+                       family = "Cabin", size = 3.5, width = unit(9, "line"), alpha = 0.9, box.colour = NA) +
+  ggtext::geom_textbox(data = penguin_highlights,
+                       aes(label = commentary, x = label_x, y = label_y, 
+                           hjust = left_to_right, halign = left_to_right),
+                       family = "Cabin", size = 3, fill = NA, box.colour = NA) +
+  geom_curve(data = penguin_highlights,
+             aes(x = label_x, xend = arrow_x_end,
+                 y = label_y, yend = arrow_y_end),
+             arrow = arrow(length = unit(0.1, "cm")),
+             curvature = 0.15,
+             alpha = 0.5) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        legend.position = "none")
+```
+:::
+
+::: {.column width=50%}
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness. \nEach penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0("**Team ", species, "**", "<br><span style = \"color:", banana_colours$light_text, "\">", commentary, "</span>")),
+                       family = "Cabin", size = 3.5, width = unit(9, "line"), alpha = 0.9, box.colour = NA) +
+  ggtext::geom_textbox(data = penguin_highlights,
+                       aes(label = commentary, x = label_x, y = label_y, hjust = left_to_right, halign = left_to_right),
+                       family = "Cabin", size = 3, fill = NA, box.colour = NA) +
+  geom_curve(data = penguin_highlights,
+             aes(x = label_x, xend = arrow_x_end, y = label_y, yend = arrow_y_end),
+             arrow = arrow(length = unit(0.1, "cm")), curvature = 0.15, alpha = 0.5) +
+  scale_x_continuous(expand = expansion(mult = c(0.15, 0.01))) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text,
+                            lineheight = 1.2),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        panel.grid = element_line(colour = "#F6F6F5"),
+        legend.position = "none")
+```
+:::
+
+:::
+
+# End of part 3 {visibility=hidden}
+
+## Seven tips to level up your plots {background=#2C3D4F}
+
+::: fragment
+
+### <span style=color:#28A569>#1</span> - Use colour (and transparency) purposefully {.faded-small}
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations {.faded-small}
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers {.faded-small}
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy {.faded-small}
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement
+
+### <span style=color:#28A569>#6</span> - Highlight important data points
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe
+
+::: 
+
+# Over to you! 
+
+- Create some annotations (as many or as few as you like!)
+- Highlight some key points
+- Clarify the story by explaining something in more detail
+- Make use of the colours within the main `aes()` call if possible
+
+
+**See you in 15 minutes!**  🌟 ✨ ☕  
+
+
+```{r}
+countdown::countdown(minutes = 15L, warn_when = 180, style = "border-color: #28A569")
+```
+
+
+## Seven tips to level up your plots {background=#2C3D4F}
+
+::: fragment
+
+### <span style=color:#28A569>#1</span> - Use colour (and transparency) purposefully
+
+### <span style=color:#28A569>#2</span> - Use intuitive orientations 
+
+### <span style=color:#28A569>#3</span> - Add colour to text to help orient readers 
+
+### <span style=color:#28A569>#4</span> - Use colours and fonts to add text hierarchy 
+
+### <span style=color:#28A569>#5</span> - Reduce unnecessary eye movement 
+
+### <span style=color:#28A569>#6</span> - Highlight important data points 
+
+### <span style=color:#28A569>#7</span> - Give everything some space to breathe 
+
+::: 
+
+## Seven tips to level up your plots {background=#2C3D4F}
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot
+
+```
+
+## Seven tips to level up your plots {background=#2C3D4F}
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+basic_plot +
+  scale_colour_manual(values = banana_colours) +
+  labs(title = paste0("Banana loaf tastes best when baked with <span style=\"color:", banana_colours$Chinstrap, "\">ripe</span> or<br><span style=\"color:", banana_colours$Gentoo, "\">over-ripe</span> bananas"),
+       subtitle = "The Palmer Penguins carried out an experiment using bananas of different ripeness. \nEach penguin was left to choose their own cooking time.") +
+  ggtext::geom_textbox(data = penguin_summaries,
+                       aes(label = paste0("**Team ", species, "**", "<br><span style = \"color:", banana_colours$light_text, "\">", commentary, "</span>")),
+                       family = "Cabin", size = 3.5, width = unit(9, "line"), alpha = 0.9, box.colour = NA) +
+  ggtext::geom_textbox(data = penguin_highlights,
+                       aes(label = commentary, x = label_x, y = label_y, hjust = left_to_right, halign = left_to_right),
+                       family = "Cabin", size = 3, fill = NA, box.colour = NA) +
+  geom_curve(data = penguin_highlights,
+             aes(x = label_x, xend = arrow_x_end, y = label_y, yend = arrow_y_end),
+             arrow = arrow(length = unit(0.1, "cm")), curvature = list(0.15), alpha = 0.5) +
+  scale_x_continuous(expand = expansion(mult = c(0.2, 0.02))) +
+  theme(text = element_text(family = "Cabin", colour = banana_colours$light_text,
+                            lineheight = 1.2),
+        plot.title = ggtext::element_markdown(size = 18, family = "Poppins", colour = banana_colours$dark_text, face = "bold"),
+        axis.text = element_text(size = 6, colour = banana_colours$light_text),
+        plot.caption = element_text(size = 6),
+        panel.grid = element_line(colour = "#F6F6F5"),
+        legend.position = "none")
+```
+
+## Seven tips to level up your plots {background=#2C3D4F}
+
+![](images/penguin-bakeoff.png)
+
+# Bonus track {background=#2C3D4F background-image=https://thumbs.gfycat.com/PerfumedDefinitiveChipmunk-size_restricted.gif}
+
+## Sources of inspiration
+
+::: {.incremental}
+- [#TidyTuesday](https://twitter.com/search?q=%23TidyTuesday%20%23rstats&src=typed_query&f=top) on Twitter - get involved!
+- Dataviz / design books
+- Kids books (palettes!)
+- Datajournalists (John Burn-Murdoch - [@jburnmurdoch](https://twitter.com/jburnmurdoch))
+- Artists (local art gallery / Twitter accounts e.g. [@womensart1](https://twitter.com/womensart1))
+:::
+
+# Q&A + Plot feedback
+
+
+
+
+
