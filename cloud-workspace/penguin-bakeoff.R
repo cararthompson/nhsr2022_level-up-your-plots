@@ -1,5 +1,13 @@
-# Libraries
+# Libraries ----
 library(tidyverse)
+
+# Fonts ----
+# Registering a variant
+# First, download the font file the font file to the project using the "Files" tab.
+# Then call systemfonts::register_font() as in the example below
+systemfonts::register_font(name = "Poppins", 
+                           # This is the path to the font I have already uploaded
+                           plain = "fonts/Poppins-Bold.ttf")
 
 # Data ----
 penguins <- palmerpenguins::penguins %>%
@@ -138,5 +146,6 @@ Each penguin was left to choose their own cooking time.") +
 
 # Export ----
 ggsave(filename = "penguin-bakeoff.png", 
-       width = 8, height = 7.5, dpi = 400, bg = "#FFFFFF")
+       width = 8, height = 7.5, dpi = 400, 
+       bg = "#FFFFFF")
 
