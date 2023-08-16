@@ -3,13 +3,11 @@
   position: fixed;
   bottom: 0;
   right: 12px;
+  margin-bottom: 8px;
   max-height: 2.2rem;
   height: 100%;
-  margin-top: 6px;
-  margin-bottom: 6px;
   width: auto;
-  /* to make logo appear over the banner*/
-  z-index: 3;
+  z-index: 5;
 }
 
 .reveal .footer {
@@ -19,8 +17,7 @@
   width: 100%;
   margin: 0 auto;
   text-align: center;
-  font-size: 18px;
-  z-index: 2;
+  font-size: 15pt;
 }
 
 .reveal .footer > * {
@@ -73,33 +70,16 @@
 
 @media screen and (max-width: 800px) {
   .reveal .slide-logo {
-    display: block;
-    position: fixed;
-    bottom: 0;
+    max-height: 1.2rem;
+    margin-bottom: 0px;
     right: 10px;
-    max-height: 1.4rem;
-    height: 100%;
-    margin-top: 1px;
-    margin-bottom: 9px;
-    width: auto;
-    /* to make logo appear over the banner*/
-    z-index: 3;
+    padding-bottom: 6px;
   }
-
   .reveal .footer {
-    display: block;
-    position: fixed;
+    font-size: 10pt;
     bottom: 0px;
-    width: 100%;
-    margin: 0 auto;
-    text-align: center;
-    font-size: 12px;
-    z-index: 2;
-  }
-
-  .reveal .footer > * {
-    margin-top: 0;
-    margin-bottom: 0;
+    padding-top: 8px;
+    padding-bottom: 6px;
   }
   .reveal .slide-number {
     font-size: 12px;
@@ -108,8 +88,10 @@
   .reveal .slide-menu-button .fas::before {
     height: 1.3rem;
     width: 1.3rem;
-    vertical-align: -0.125em;
+    vertical-align: -1em;
     background-size: 1.3rem 1.3rem;
+	padding-bottom: 6px;
+	margin-bottom: -0.35em;
   }
 
   .reveal .slide-chalkboard-buttons .fas::before {
